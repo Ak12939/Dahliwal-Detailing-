@@ -1,0 +1,26 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
+
+@theme {
+  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Cormorant Garamond", serif;
+  --color-primary: #D4AF37; /* Metallic Gold */
+  --color-navy: #0D1117;
+  --color-gold-light: #F1D279;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    @apply antialiased overflow-x-hidden bg-navy text-zinc-100 selection:bg-primary/30 selection:text-white;
+  }
+}
+
+@layer components {
+  .gold-gradient {
+    @apply bg-gradient-to-br from-gold-light via-primary to-primary/70 bg-clip-text text-transparent;
+  }
+}
