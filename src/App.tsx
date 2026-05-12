@@ -123,16 +123,18 @@ export default function App() {
       return;
     }
 
+    console.log("Submitting booking request...", formData);
     setStatus("loading");
     try {
-      const response = await fetch("/api/book", {
+      const response = await fetch("/api/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData)
       });
       
       const result = await response.json();
-      if (result.success) {
+      if (response.ok && result.success) {
+        console.log("Booking Success:", result);
         setStatus("success");
         setFormData({ 
           name: "", 
@@ -144,10 +146,11 @@ export default function App() {
         });
         setTimeout(() => setStatus("idle"), 5000);
       } else {
+        console.error("Booking Error Detail:", result);
         throw new Error(result.error || "Failed to book");
       }
     } catch (err) {
-      console.error(err);
+      console.error("Booking submission failed:", err);
       setStatus("error");
       setTimeout(() => setStatus("idle"), 5000);
     }

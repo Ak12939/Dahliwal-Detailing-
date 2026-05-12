@@ -24,18 +24,21 @@ app.use(cors());
 app.use(express.json());
 
 // Booking API Endpoint
-app.post("/api/book", async (req, res) => {
+app.post("/api/send", async (req, res) => {
   const { name, email, model, service, dateTime, message } = req.body;
 
   if (!name || !email || !model || !service || !dateTime) {
-    return res.status(400).json({ error: "Missing required fields" });
+    return res.status(400).json({ 
+      error: "Missing required fields", 
+      received: { name, email, model, service, dateTime } 
+    });
   }
 
   try {
     const client = getResend();
     const { data, error } = await client.emails.send({
-      from: "Dhaliwal Detailing <bookings@resend.dev>", // This needs to be a verified domain in production
-      to: [process.env.ADMIN_EMAIL || "Gurbir.dhaliwxl14@gmail.com"],
+      from: "Dhaliwal Detailing <onboarding@resend.dev>", // Sandbox requirement
+      to: ["Gurbir.dhaliwxl14@gmail.com"], // Hardcoded as per request
       subject: `New Detailing Booking: ${name}`,
       text: `
         Name: ${name}
@@ -48,14 +51,20 @@ app.post("/api/book", async (req, res) => {
     });
 
     if (error) {
-      console.error("Resend Error:", error);
-      return res.status(500).json({ error: "Failed to send email" });
+      console.error("Resend Error Detail:", JSON.stringify(error, null, 2));
+      return res.status(500).json({ 
+        error: "Resend failed to send email", 
+        details: error 
+      });
     }
 
     res.json({ success: true, data });
   } catch (error) {
-    console.error("Booking Error:", error);
-    res.status(500).json({ error: error instanceof Error ? error.message : "Internal Server Error" });
+    console.error("Internal Server Error Detail:", error);
+    res.status(500).json({ 
+      error: error instanceof Error ? error.message : "Internal Server Error",
+      stack: error instanceof Error ? error.stack : undefined
+    });
   }
 });
 
