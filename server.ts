@@ -35,7 +35,7 @@ app.post("/api/book", async (req, res) => {
     const client = getResend();
     const { data, error } = await client.emails.send({
       from: "Dhaliwal Detailing <bookings@resend.dev>", // This needs to be a verified domain in production
-      to: [process.env.ADMIN_EMAIL || "kalariaanuj2121@gmail.com"],
+      to: [process.env.ADMIN_EMAIL || "Gurbir.dhaliwxl14@gmail.com"],
       subject: `New Detailing Booking: ${name}`,
       text: `
         Name: ${name}
