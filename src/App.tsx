@@ -123,7 +123,7 @@ export default function App() {
       return;
     }
 
-    console.log("Submitting booking request...", formData);
+    console.log("Submitting booking request to /api/send...", formData);
     setStatus("loading");
     try {
       const response = await fetch("/api/send", {
@@ -132,9 +132,19 @@ export default function App() {
         body: JSON.stringify(formData)
       });
       
-      const result = await response.json();
+      const contentType = response.headers.get("content-type");
+      let result;
+      if (contentType && contentType.includes("application/json")) {
+        result = await response.json();
+      } else {
+        const text = await response.text();
+        console.error("Non-JSON response received:", text);
+        throw new Error(`Server returned non-JSON response (${response.status}). Please check if the API exists.`);
+      }
+
       if (response.ok && result.success) {
         console.log("Booking Success:", result);
+        alert("Booking Request Sent Successfully! We will contact you soon.");
         setStatus("success");
         setFormData({ 
           name: "", 
@@ -146,11 +156,16 @@ export default function App() {
         });
         setTimeout(() => setStatus("idle"), 5000);
       } else {
+        const errorMsg = result.error || "Failed to book";
         console.error("Booking Error Detail:", result);
-        throw new Error(result.error || "Failed to book");
+        alert(`Booking Error: ${errorMsg}`);
+        throw new Error(errorMsg);
       }
     } catch (err) {
       console.error("Booking submission failed:", err);
+      if (!(err instanceof Error) || err.message !== "Failed to book") {
+         alert(`Connection Error: ${err instanceof Error ? err.message : String(err)}`);
+      }
       setStatus("error");
       setTimeout(() => setStatus("idle"), 5000);
     }

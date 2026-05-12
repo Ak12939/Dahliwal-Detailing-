@@ -23,8 +23,8 @@ const getResend = () => {
 app.use(cors());
 app.use(express.json());
 
-// Booking API Endpoint
-app.post("/api/send", async (req, res) => {
+// Booking API Endpoint (Aliased for backward compatibility)
+app.post(["/api/send", "/api/book"], async (req, res) => {
   const { name, email, model, service, dateTime, message } = req.body;
 
   if (!name || !email || !model || !service || !dateTime) {
@@ -37,24 +37,29 @@ app.post("/api/send", async (req, res) => {
   try {
     const client = getResend();
     const { data, error } = await client.emails.send({
-      from: "Dhaliwal Detailing <onboarding@resend.dev>", // Sandbox requirement
-      to: ["Gurbir.dhaliwxl14@gmail.com"], // Hardcoded as per request
+      from: "onboarding@resend.dev",
+      to: ["Gurbir.dhaliwxl14@gmail.com"],
       subject: `New Detailing Booking: ${name}`,
-      text: `
-        Name: ${name}
-        Email: ${email}
-        Vehicle: ${model}
-        Service: ${service}
-        Requested Date/Time: ${dateTime}
-        Message: ${message || "No message provided."}
+      html: `
+        <div style="font-family: sans-serif; line-height: 1.6; color: #333;">
+          <h2 style="color: #1a1a1a;">New Detailing Booking Request</h2>
+          <p><strong>Name:</strong> ${name}</p>
+          <p><strong>Email:</strong> ${email}</p>
+          <p><strong>Vehicle:</strong> ${model}</p>
+          <p><strong>Service:</strong> ${service}</p>
+          <p><strong>Requested Date/Time:</strong> ${dateTime}</p>
+          <p><strong>Message:</strong></p>
+          <p style="background: #f4f4f4; padding: 10px; border-radius: 4px;">${message || "No message provided."}</p>
+        </div>
       `,
     });
 
     if (error) {
-      console.error("Resend Error Detail:", JSON.stringify(error, null, 2));
-      return res.status(500).json({ 
-        error: "Resend failed to send email", 
-        details: error 
+      console.error("Resend API Error:", error);
+      return res.status(error.statusCode || 500).json({ 
+        error: error.name || "Resend failed to send email", 
+        details: error.message || error,
+        raw: error
       });
     }
 
