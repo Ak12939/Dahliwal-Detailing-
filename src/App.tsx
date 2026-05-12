@@ -132,6 +132,7 @@ export default function App() {
         body: JSON.stringify(formData)
       });
       
+      console.log(`Fetch response status: ${response.status} ${response.statusText}`);
       const contentType = response.headers.get("content-type");
       let result;
       if (contentType && contentType.includes("application/json")) {
@@ -139,7 +140,8 @@ export default function App() {
       } else {
         const text = await response.text();
         console.error("Non-JSON response received:", text);
-        throw new Error(`Server returned non-JSON response (${response.status}). Please check if the API exists.`);
+        alert(`Server Error (${response.status}): The server returned an invalid response. Please try again later.`);
+        throw new Error(`Server returned non-JSON response (${response.status}).`);
       }
 
       if (response.ok && result.success) {
