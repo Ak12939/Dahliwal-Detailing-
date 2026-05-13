@@ -123,30 +123,32 @@ export default function App() {
       return;
     }
 
-    console.log("Submitting booking request to /api/send...", formData);
+    // Map internal state keys to the names requested for Formspree labels
+    const submissionData = {
+      "Name": formData.name,
+      "Email": formData.email,
+      "Vehicle": formData.model,
+      "Service": formData.service,
+      "Requested Date/Time": formData.dateTime,
+      "Message": formData.message
+    };
+
+    console.log("Submitting booking request to Formspree...", submissionData);
     setStatus("loading");
     try {
-      const response = await fetch("/api/send", {
+      const response = await fetch("https://formspree.io/f/mwvyzvnb", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData)
+        headers: { 
+          "Accept": "application/json",
+          "Content-Type": "application/json" 
+        },
+        body: JSON.stringify(submissionData)
       });
       
-      console.log(`Fetch response status: ${response.status} ${response.statusText}`);
-      const contentType = response.headers.get("content-type");
-      let result;
-      if (contentType && contentType.includes("application/json")) {
-        result = await response.json();
-      } else {
-        const text = await response.text();
-        console.error("Non-JSON response received:", text);
-        alert(`Server Error (${response.status}): The server returned an invalid response. Please try again later.`);
-        throw new Error(`Server returned non-JSON response (${response.status}).`);
-      }
+      const result = await response.json();
+      console.log("Formspree response:", result);
 
-      if (response.ok && result.success) {
-        console.log("Booking Success:", result);
-        alert("Booking Request Sent Successfully! We will contact you soon.");
+      if (response.ok) {
         setStatus("success");
         setFormData({ 
           name: "", 
@@ -158,16 +160,12 @@ export default function App() {
         });
         setTimeout(() => setStatus("idle"), 5000);
       } else {
-        const errorMsg = result.error || "Failed to book";
-        console.error("Booking Error Detail:", result);
-        alert(`Booking Error: ${errorMsg}`);
+        const errorMsg = result.errors?.[0]?.message || "Submission failed";
+        alert(`Error: ${errorMsg}`);
         throw new Error(errorMsg);
       }
-    } catch (err) {
-      console.error("Booking submission failed:", err);
-      if (!(err instanceof Error) || err.message !== "Failed to book") {
-         alert(`Connection Error: ${err instanceof Error ? err.message : String(err)}`);
-      }
+    } catch (err: any) {
+      console.error("Formspree submission failed:", err);
       setStatus("error");
       setTimeout(() => setStatus("idle"), 5000);
     }
@@ -540,6 +538,7 @@ export default function App() {
               <label className="text-[9px] uppercase tracking-widest text-zinc-500">Full Name</label>
               <input 
                 required
+                name="Name"
                 type="text" 
                 placeholder="John Doe" 
                 value={formData.name}
@@ -551,6 +550,7 @@ export default function App() {
               <label className="text-[9px] uppercase tracking-widest text-zinc-500">Email Address</label>
               <input 
                 required
+                name="Email"
                 type="email" 
                 placeholder="john@example.com" 
                 value={formData.email}
@@ -562,6 +562,7 @@ export default function App() {
               <label className="text-[9px] uppercase tracking-widest text-zinc-500">Vehicle Model / Year</label>
               <input 
                 required
+                name="Vehicle"
                 type="text" 
                 placeholder="Porsche 911 GT3" 
                 value={formData.model}
@@ -573,6 +574,7 @@ export default function App() {
               <label className="text-[9px] uppercase tracking-widest text-zinc-500">Type of Service</label>
               <select 
                 required
+                name="Service"
                 value={formData.service}
                 onChange={(e) => setFormData({...formData, service: e.target.value})}
                 className="bg-zinc-800/50 border border-white/5 p-4 text-xs text-white focus:outline-none focus:border-white/20 transition-all appearance-none"
@@ -586,6 +588,7 @@ export default function App() {
               <label className="text-[9px] uppercase tracking-widest text-zinc-500">What date and time would you like to come?</label>
               <input 
                 required
+                name="Requested Date/Time"
                 type="datetime-local" 
                 value={formData.dateTime}
                 onChange={(e) => setFormData({...formData, dateTime: e.target.value})}
@@ -596,6 +599,7 @@ export default function App() {
               <label className="text-[9px] uppercase tracking-widest text-zinc-500">Additional Message</label>
               <textarea 
                 rows={4}
+                name="Message"
                 placeholder="Tell us about the condition or specific requests..." 
                 value={formData.message}
                 onChange={(e) => setFormData({...formData, message: e.target.value})}
